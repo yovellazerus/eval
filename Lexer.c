@@ -40,7 +40,7 @@ Token Lexer_nextToken(Lexer* lexer){
     
     // start for new token
     lexer->start = lexer->end;
-    if(isdigit(*(lexer->end))){
+    if(isdigit(*(lexer->end))){ // || (*(lexer->end) == '-' && *(lexer->end + 1) != '\0' && (isdigit(*(lexer->end + 1)) || *(lexer->end + 1) == '(')) ){
         return Lexer_lexNumber(lexer);
     }
     else if (isalpha(*(lexer->end))){
@@ -72,7 +72,7 @@ Token Lexer_lexName(Lexer* lexer){
 
 Token Lexer_lexOperand(Lexer* lexer){
     Token res = Token_init(NULL, 0, Token_EOF, 0.0);
-    // one char op onlly for now..
+    // one char op only for now..
     char char_op = *(lexer->end); 
     lexer->end++;
     lexer->start++;

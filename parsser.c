@@ -31,7 +31,7 @@ Err shunting_yard(Token infixTokens[MAX_TOKENS], Token posfixTokens[MAX_TOKENS])
                 posfix_index++;
                 break;
             case Token_NAME:
-                // anlly vars for now no functions!
+                // only vars for now no functions!
                 posfixTokens[posfix_index] = currentToken;
                 posfix_index++;
                 break;
@@ -78,11 +78,11 @@ Err shunting_yard(Token infixTokens[MAX_TOKENS], Token posfixTokens[MAX_TOKENS])
                     sp--;
                     posfix_index++;
                 }
-                // if loop ended with no stack anderflow
+                
                 if(sp > 0){
                     sp--;
                 }
-                // stack anderflow!
+                
                 else{
                     return Err_MismatchedParentheses;
                 }
@@ -103,7 +103,6 @@ Err shunting_yard(Token infixTokens[MAX_TOKENS], Token posfixTokens[MAX_TOKENS])
         sp--;
         posfix_index++;
     }
-    // null termited
     posfixTokens[posfix_index].type = Token_EOF;
     return Err_ok;
 }
@@ -149,7 +148,6 @@ bool is_left_associative(Token* token){
     }
 }
 
-// TODO: "error handling in a real way..."
 double eval_posfix(Token posfixTokens[MAX_TOKENS]){
     double stack[MAX_TOKENS];
     int sp = 0;
@@ -161,7 +159,8 @@ double eval_posfix(Token posfixTokens[MAX_TOKENS]){
             case Token_NUMBER:
             case Token_NAME: // no func for now...
                 if(sp >= MAX_TOKENS){
-                    assert(false && "Stack overflow");
+                    fprintf(stderr, "ERROR: stackOverflow in Line: %d file: %s", __LINE__, __FILE__);
+                    exit(1);
                 }
                 stack[sp] = curr.value;
                 sp++;
@@ -175,7 +174,8 @@ double eval_posfix(Token posfixTokens[MAX_TOKENS]){
             case Token_MINOS:
             
                 if (sp < 2) {
-                    assert(false && "Stack underflow during evaluation");
+                    fprintf(stderr, "ERROR: stackUnderflow in Line: %d file: %s", __LINE__, __FILE__);
+                    exit(1);
                 }   
                 
                 double right = stack[sp - 1];
@@ -187,14 +187,16 @@ double eval_posfix(Token posfixTokens[MAX_TOKENS]){
                 break;
             
             default:
-                assert(false && "unreachable");
+                fprintf(stderr, "ERROR: Err_unknownToken in Line: %d file: %s", __LINE__, __FILE__);
+                exit(1);
                 break;
         }
         
         input_index++;
     }
     if(sp != 1){
-        assert(false && "stack not empty after eval");
+        fprintf(stderr, "ERROR: stack not empty after eval in Line: %d file: %s", __LINE__, __FILE__);
+        exit(1);
     }
     return stack[0];
 }
@@ -208,7 +210,8 @@ double operation(double left, double right, TokenType type) {
         case Token_MOD:   return fmod(left, right);
         case Token_CURET: return pow(left, right);
         default:
-            assert(false && "unreachable");
+            fprintf(stderr, "ERROR: unknown operation %S in Line: %d file: %s",type_to_str_table[type], __LINE__, __FILE__);
+            exit(1);
             break;
     }
 }
@@ -226,16 +229,24 @@ double eval(char* input){
             res = eval_posfix(posfixTokens);
             break;
         case Err_stackUnderflow:
-            assert(false && "ERROR: Err_stackUnderflow error in eval function");
+            fprintf(stderr, "ERROR: Err_stackUnderflow in Line: %d file: %s", __LINE__, __FILE__);
+            exit(1);
+            break;
+        case Err_stackOverflow:
+            fprintf(stderr, "ERROR: Err_stackOverflow in Line: %d file: %s", __LINE__, __FILE__);
+            exit(1);
             break;
         case Err_MismatchedParentheses:
-            assert(false && "ERROR: Err_MismatchedParentheses error in eval function");
+            fprintf(stderr, "ERROR: Err_MismatchedParentheses in Line: %d file: %s", __LINE__, __FILE__);
+            exit(1);
             break;
         case Err_unknownToken:
-            assert(false && "ERROR: Err_unknownToken error in eval function");
+            fprintf(stderr, "ERROR: Err_unknownToken in Line: %d file: %s", __LINE__, __FILE__);
+            exit(1);
             break;
         default:
-            assert(false && "ERROR: unknon error in eval function");
+            fprintf(stderr, "ERROR: unknown error in Line: %d file: %s", __LINE__, __FILE__);
+            exit(1);
             break;
     }
     
