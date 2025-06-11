@@ -37,10 +37,12 @@ Token Lexer_nextToken(Lexer* lexer){
     if(*(lexer->end) == '\0'){
         return Token_init(lexer->end, 0, Token_EOF, 0.0);
     }
-    
+
     // start for new token
     lexer->start = lexer->end;
-    if(isdigit(*(lexer->end))){ // || (*(lexer->end) == '-' && *(lexer->end + 1) != '\0' && (isdigit(*(lexer->end + 1)) || *(lexer->end + 1) == '(')) ){
+    if(isdigit(*(lexer->end)) 
+        // for (negative numbers)
+        || (*(lexer->end) == '-' && *(lexer->end + 1) != '\0' && isdigit(*(lexer->end + 1)))){
         return Lexer_lexNumber(lexer);
     }
     else if (isalpha(*(lexer->end))){
