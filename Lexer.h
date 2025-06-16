@@ -25,6 +25,7 @@ typedef enum {
     Token_MOD,
     Token_OPEN,
     Token_CLOSE,
+    Token_EXCLAMATION,
 } TokenType;
 
 static char* type_to_str_table[] = {
@@ -40,6 +41,7 @@ static char* type_to_str_table[] = {
     [Token_MOD] = "MOD",
     [Token_OPEN]= "OPEN",
     [Token_CLOSE] = "CLOSE", 
+    [Token_EXCLAMATION] = "EXCLAMATION",
 };
 
 typedef struct Token {

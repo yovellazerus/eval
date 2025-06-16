@@ -103,6 +103,9 @@ Token Lexer_lexOperand(Lexer* lexer){
         case ')':
             res = Token_init(lexer->end - 1, 1, Token_CLOSE, 0.0);
             break;
+        case '!':
+            res = Token_init(lexer->end - 1, 1, Token_EXCLAMATION, 0.0);
+            break;
         default:
             res = Token_init(lexer->end - 1, 1, Token_ERROR, 0.0);
             break;

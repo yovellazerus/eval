@@ -1,9 +1,21 @@
 
 #include "parsser.h"
 
+// custom math functions:
+static double factorial(double arg){
+    if(arg < 0.0 || ceil(arg) != floor(arg)){
+        return nan("");
+    }
+    if( arg == 0.0){
+        return 1.0;
+    }
+    return factorial(arg - 1.0) * arg;
+}
+
 int precedence(Token* token){
     switch (token->type){
         case Token_CURET:
+        case Token_EXCLAMATION:
             return 3;
         case Token_DIV:
         case Token_MUL:
@@ -45,6 +57,7 @@ Err shunting_yard(Token infixTokens[MAX_TOKENS], Token posfixTokens[MAX_TOKENS])
             case Token_MOD:
             case Token_PLUS:
             case Token_MINOS:
+            case Token_EXCLAMATION:
                 while(sp > 0 &&
                       is_operator(&stack[sp - 1]) &&
                       (
@@ -123,6 +136,7 @@ bool is_operator(Token* token){
         case Token_DIV:
         case Token_MUL:
         case Token_MOD:
+        case Token_EXCLAMATION:
             return true;
         case Token_OPEN:
             return false;
@@ -136,6 +150,7 @@ bool is_operator(Token* token){
 bool is_left_associative(Token* token){
     switch (token->type){
         case Token_CURET:
+        case Token_EXCLAMATION:
             return false;
         case Token_PLUS:
         case Token_MINOS:
@@ -186,6 +201,19 @@ double eval_posfix(Token posfixTokens[MAX_TOKENS]){
                 sp++;
                 break;
             
+            // unary ops:
+            case Token_EXCLAMATION:
+                if (sp < 1) {
+                    fprintf(stderr, "ERROR: stackUnderflow in Line: %d file: %s", __LINE__, __FILE__);
+                    exit(1);
+                }  
+            
+                double operand = stack[sp - 1];
+                sp--;
+                stack[sp] = operation(operand, 0.0, curr.type);
+                sp++;
+                break;
+            
             default:
                 fprintf(stderr, "ERROR: Err_unknownToken in Line: %d file: %s", __LINE__, __FILE__);
                 exit(1);
@@ -209,6 +237,7 @@ double operation(double left, double right, TokenType type) {
         case Token_DIV:   return left / right;
         case Token_MOD:   return fmod(left, right);
         case Token_CURET: return pow(left, right);
+        case Token_EXCLAMATION: return factorial(left);
         default:
             fprintf(stderr, "ERROR: unknown operation %S in Line: %d file: %s",type_to_str_table[type], __LINE__, __FILE__);
             exit(1);

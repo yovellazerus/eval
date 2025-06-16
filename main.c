@@ -12,19 +12,15 @@ typedef enum {
 } ProgramSeting;
 
 bool test1();
+bool interactive_program(int argc, char* argv[]);
 
 ProgramSeting getProgramSeting(int argc, char* argv[]);
 
 int main(int argc, char* argv[])
 {
-    if(argc != 2){
-        fprintf(stderr, "USEAGE: eval \"expression\", example: eval \"8 - (2 ^ 3) * 2\"\n");
+    if(test1()){
         return 1;
     }
-
-    double res = eval(argv[1]);
-    printf("%f\n", res);
-
     return 0;
 }
 
@@ -46,7 +42,7 @@ bool test1(){
     char line[MAX_TEST_LINE];
     while (fgets(line, sizeof(line), infile)) {
         line[strcspn(line, "\n")] = 0;
-        fprintf(outfile, "%f\n", eval(line));
+        fprintf(outfile, "%.8f\n", eval(line));
     }
 
     fclose(infile);
@@ -78,4 +74,15 @@ ProgramSeting getProgramSeting(int argc, char* argv[]){
     }
 
     return ProgramSeting_expression;
+}
+
+bool interactive_program(int argc, char* argv[]){
+    if(argc != 2){
+        fprintf(stderr, "USEAGE: eval \"expression\", example: eval \"8 - (2 ^ 3) * 2\"\n");
+        return false;
+    }
+
+    double res = eval(argv[1]);
+    printf("%f\n", res);
+    return true;
 }
