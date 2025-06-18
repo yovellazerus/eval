@@ -2,23 +2,26 @@
 #include "Lexer.h"
 #include "parsser.h"
 
-#define MAX_TEST_LINE 256
-
-typedef enum {
-    ProgramSeting_expression = 0,
-    ProgramSeting_file,
-    ProgramSeting_noArgs,
-    ProgramSeting_toMuchArgs,
-} ProgramSeting;
+#define MAX_TEST_LINE (256*256)
 
 bool test1();
 bool interactive_program(int argc, char* argv[]);
 
-ProgramSeting getProgramSeting(int argc, char* argv[]);
-
 int main(int argc, char* argv[])
 {
-    if(test1()){
+    if(argc < 2){
+        fprintf(stderr, "USEAGE: eval \"<expression>\", example: eval \"8 - (2 ^ 3) * 2\"\nor: eval -test\n");
+        return 1;
+    }
+    if(strcmp(argv[1], "-test") == 0){
+        if(!test1()){
+            return 1;
+        }
+        else{
+            return 0;
+        }
+    }
+    if(!interactive_program(argc, argv)){
         return 1;
     }
     return 0;
@@ -49,31 +52,6 @@ bool test1(){
     fclose(outfile);
 
     return true;
-}
-
-ProgramSeting getProgramSeting(int argc, char* argv[]){
-
-    if(argc < 2){
-        return ProgramSeting_noArgs;
-    }
-
-    if(argc > 3){
-        return ProgramSeting_toMuchArgs;
-    }
-    
-    for(int i = 0; i < argc; i++){
-        if (strcmp(argv[i], "-file") == 0){
-            return ProgramSeting_file;
-        }
-        else if (strcmp(argv[i], "-expr") == 0){
-            return ProgramSeting_expression;
-        }
-        else {
-            return ProgramSeting_expression;
-        }
-    }
-
-    return ProgramSeting_expression;
 }
 
 bool interactive_program(int argc, char* argv[]){

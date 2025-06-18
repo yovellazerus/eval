@@ -11,6 +11,7 @@
 #include <math.h>
 
 #define MAX_TOKENS 256
+#define MAX_FUNCTION_VALUES 8
 
 typedef enum {
     Token_EOF,

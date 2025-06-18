@@ -163,7 +163,7 @@ bool is_left_associative(Token* token){
     }
 }
 
-double eval_posfix(Token posfixTokens[MAX_TOKENS]){
+double eval_posfix(Token posfixTokens[MAX_TOKENS], Err* error_status){
     double stack[MAX_TOKENS];
     int sp = 0;
     
@@ -174,8 +174,8 @@ double eval_posfix(Token posfixTokens[MAX_TOKENS]){
             case Token_NUMBER:
             case Token_NAME: // no func for now...
                 if(sp >= MAX_TOKENS){
-                    fprintf(stderr, "ERROR: stackOverflow in Line: %d file: %s", __LINE__, __FILE__);
-                    exit(1);
+                    *error_status = Err_stackOverflow;
+                    return 0;
                 }
                 stack[sp] = curr.value;
                 sp++;
@@ -189,8 +189,8 @@ double eval_posfix(Token posfixTokens[MAX_TOKENS]){
             case Token_MINOS:
             
                 if (sp < 2) {
-                    fprintf(stderr, "ERROR: stackUnderflow in Line: %d file: %s", __LINE__, __FILE__);
-                    exit(1);
+                    *error_status = Err_stackUnderflow;
+                    return 0;
                 }   
                 
                 double right = stack[sp - 1];
@@ -204,8 +204,8 @@ double eval_posfix(Token posfixTokens[MAX_TOKENS]){
             // unary ops:
             case Token_EXCLAMATION:
                 if (sp < 1) {
-                    fprintf(stderr, "ERROR: stackUnderflow in Line: %d file: %s", __LINE__, __FILE__);
-                    exit(1);
+                    *error_status = Err_stackUnderflow;
+                    return 0;
                 }  
             
                 double operand = stack[sp - 1];
@@ -215,16 +215,16 @@ double eval_posfix(Token posfixTokens[MAX_TOKENS]){
                 break;
             
             default:
-                fprintf(stderr, "ERROR: Err_unknownToken in Line: %d file: %s", __LINE__, __FILE__);
-                exit(1);
+                *error_status = Err_unknownToken;
+                return 0;
                 break;
         }
         
         input_index++;
     }
     if(sp != 1){
-        fprintf(stderr, "ERROR: stack not empty after eval in Line: %d file: %s", __LINE__, __FILE__);
-        exit(1);
+        *error_status = Err_stackNotEmpty;
+        return 0;
     }
     return stack[0];
 }
@@ -252,10 +252,11 @@ double eval(char* input){
     double res = 0.0;
     
     int numTokens = lexer_lexAllContent(&lexer, infixTokens);
-    Err err = shunting_yard(infixTokens, posfixTokens);
-    switch (err) {
+    Err error_status = shunting_yard(infixTokens, posfixTokens);
+    res = eval_posfix(posfixTokens, &error_status);
+    switch (error_status) {
         case Err_ok:
-            res = eval_posfix(posfixTokens);
+            return res;
             break;
         case Err_stackUnderflow:
             fprintf(stderr, "ERROR: Err_stackUnderflow in Line: %d file: %s", __LINE__, __FILE__);
@@ -273,11 +274,85 @@ double eval(char* input){
             fprintf(stderr, "ERROR: Err_unknownToken in Line: %d file: %s", __LINE__, __FILE__);
             exit(1);
             break;
+        case Err_stackNotEmpty:
+            fprintf(stderr, "ERROR: Err_stackNotEmpty in Line: %d file: %s", __LINE__, __FILE__);
+            exit(1);
+            break;
         default:
             fprintf(stderr, "ERROR: unknown error in Line: %d file: %s", __LINE__, __FILE__);
             exit(1);
             break;
     }
-    
+}
+
+// AST:
+
+int op_to_number_of_values_table[] = {
+    [Token_EOF] = -1,
+    [Token_ERROR] = -1,
+    [Token_NUMBER] = 0,
+    [Token_NAME] = 0,
+    [Token_PLUS] = 2,
+    [Token_MINOS] = 2,
+    [Token_CURET] = 2,
+    [Token_DIV] = 2,
+    [Token_MUL] = 2,
+    [Token_MOD] = 2,
+    [Token_OPEN]= -1,
+    [Token_CLOSE] = -1, 
+    [Token_EXCLAMATION] = 1,  
+};
+
+typedef struct Node_t
+{
+    struct Node_t* m_sons[MAX_FUNCTION_VALUES];
+    bool m_is_op;
+    Token* m_token;
+    int m_number_of_sons;
+} Node;
+
+Node* Node_create(Token* token){
+    if(!token){
+        return NULL;
+    }
+    Node* res = (Node*)malloc(sizeof(*res));
+    if(!res){
+        return NULL;
+    }
+    res->m_token = token;
+    res->m_is_op = is_operator(token);
+    res->m_number_of_sons = op_to_number_of_values_table[token->type];
     return res;
+}
+
+void Node_destroy(Node* node){
+    free(node);
+    node = NULL;
+}
+
+
+struct AST_t{
+    Node* m_root;
+};
+
+AST* AST_grow(Token infixTokens[MAX_TOKENS]){
+    int index = 0;
+    while(infixTokens[index].type != Token_EOF){
+
+        index++;
+    }
+}
+
+void AST_destroy_aux(Node* node){
+    if(!node){
+        return;
+    }
+    for(int i = 0; i < node->m_number_of_sons; i++){
+        AST_destroy_aux(node->m_sons[i]);
+    }
+    Node_destroy(node);
+}
+
+void AST_destroy(AST* ast){
+    AST_destroy_aux(ast->m_root);
 }
